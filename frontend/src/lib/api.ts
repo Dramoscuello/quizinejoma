@@ -1,5 +1,20 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
-const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
+export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol; // "http:" or "https:"
+    const hostname = window.location.hostname; // e.g. "192.168.1.50", "localhost", etc.
+    return `${protocol}//${hostname}:8080/api`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+}
+
+export function getWsBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const hostname = window.location.hostname; // e.g. "192.168.1.50", "localhost", etc.
+    return `${wsProtocol}//${hostname}:8080/ws`;
+  }
+  return process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
+}
 
 function getAuthHeader(): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -19,7 +34,7 @@ function getAuthHeader(): Record<string, string> {
 
 // 1. Auth
 export async function apiLogin(username: string, password: string) {
-  const res = await fetch(`${API_BASE}/login`, {
+  const res = await fetch(`${getApiBaseUrl()}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
@@ -33,13 +48,13 @@ export async function apiLogin(username: string, password: string) {
 
 // 2. Grades
 export async function apiGetGrades() {
-  const res = await fetch(`${API_BASE}/grades`);
+  const res = await fetch(`${getApiBaseUrl()}/grades`);
   if (!res.ok) throw new Error("Error obteniendo grados");
   return res.json();
 }
 
 export async function apiCreateGrade(name: string, description?: string) {
-  const res = await fetch(`${API_BASE}/grades`, {
+  const res = await fetch(`${getApiBaseUrl()}/grades`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -52,7 +67,7 @@ export async function apiCreateGrade(name: string, description?: string) {
 }
 
 export async function apiDeleteGrade(id: string) {
-  const res = await fetch(`${API_BASE}/grades/${id}`, {
+  const res = await fetch(`${getApiBaseUrl()}/grades/${id}`, {
     method: "DELETE",
     headers: { ...getAuthHeader() },
   });
@@ -62,13 +77,13 @@ export async function apiDeleteGrade(id: string) {
 
 // 3. Groups
 export async function apiGetGroups(gradeId: string) {
-  const res = await fetch(`${API_BASE}/grades/${gradeId}/groups`);
+  const res = await fetch(`${getApiBaseUrl()}/grades/${gradeId}/groups`);
   if (!res.ok) throw new Error("Error obteniendo grupos");
   return res.json();
 }
 
 export async function apiCreateGroup(gradeId: string, name: string, studentCount?: number) {
-  const res = await fetch(`${API_BASE}/grades/${gradeId}/groups`, {
+  const res = await fetch(`${getApiBaseUrl()}/grades/${gradeId}/groups`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -84,7 +99,7 @@ export async function apiCreateGroup(gradeId: string, name: string, studentCount
 }
 
 export async function apiDeleteGroup(id: string) {
-  const res = await fetch(`${API_BASE}/groups/${id}`, {
+  const res = await fetch(`${getApiBaseUrl()}/groups/${id}`, {
     method: "DELETE",
     headers: { ...getAuthHeader() },
   });
@@ -94,7 +109,7 @@ export async function apiDeleteGroup(id: string) {
 
 // 4. Quizzes & Markdown
 export async function apiGetQuizzes(gradeId: string) {
-  const res = await fetch(`${API_BASE}/grades/${gradeId}/quizzes`);
+  const res = await fetch(`${getApiBaseUrl()}/grades/${gradeId}/quizzes`);
   if (!res.ok) throw new Error("Error obteniendo quizzes");
   return res.json();
 }
@@ -105,7 +120,7 @@ export async function apiCreateQuiz(
   timeLimitSeconds: number,
   markdownContent: string
 ) {
-  const res = await fetch(`${API_BASE}/grades/${gradeId}/quizzes`, {
+  const res = await fetch(`${getApiBaseUrl()}/grades/${gradeId}/quizzes`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -125,7 +140,7 @@ export async function apiCreateQuiz(
 }
 
 export async function apiDeleteQuiz(id: string) {
-  const res = await fetch(`${API_BASE}/quizzes/${id}`, {
+  const res = await fetch(`${getApiBaseUrl()}/quizzes/${id}`, {
     method: "DELETE",
     headers: { ...getAuthHeader() },
   });
@@ -135,7 +150,7 @@ export async function apiDeleteQuiz(id: string) {
 
 // 5. Play Sessions & PIN
 export async function apiStartPlay(quizId: string, groupId?: string) {
-  const res = await fetch(`${API_BASE}/quizzes/${quizId}/play`, {
+  const res = await fetch(`${getApiBaseUrl()}/quizzes/${quizId}/play`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -151,7 +166,7 @@ export async function apiStartPlay(quizId: string, groupId?: string) {
 }
 
 export async function apiValidatePin(pin: string) {
-  const res = await fetch(`${API_BASE}/sessions/join`, {
+  const res = await fetch(`${getApiBaseUrl()}/sessions/join`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ pin }),
@@ -161,7 +176,7 @@ export async function apiValidatePin(pin: string) {
 }
 
 export async function apiJoinSession(pin: string, name: string) {
-  const res = await fetch(`${API_BASE}/sessions/${pin}/join`, {
+  const res = await fetch(`${getApiBaseUrl()}/sessions/${pin}/join`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
@@ -171,13 +186,13 @@ export async function apiJoinSession(pin: string, name: string) {
 }
 
 export async function apiGetParticipants(pin: string) {
-  const res = await fetch(`${API_BASE}/sessions/${pin}/participants`);
+  const res = await fetch(`${getApiBaseUrl()}/sessions/${pin}/participants`);
   if (!res.ok) throw new Error("Error obteniendo participantes");
   return res.json();
 }
 
 export async function apiGetSessionResults(sessionId: string) {
-  const res = await fetch(`${API_BASE}/sessions/${sessionId}/results`, {
+  const res = await fetch(`${getApiBaseUrl()}/sessions/${sessionId}/results`, {
     headers: { ...getAuthHeader() },
   });
   if (!res.ok) throw new Error("Error obteniendo resultados de la sesión");
@@ -185,7 +200,7 @@ export async function apiGetSessionResults(sessionId: string) {
 }
 
 export async function apiGetHistory() {
-  const res = await fetch(`${API_BASE}/sessions/history`, {
+  const res = await fetch(`${getApiBaseUrl()}/sessions/history`, {
     headers: { ...getAuthHeader() },
   });
   if (!res.ok) throw new Error("Error obteniendo historial");
@@ -193,7 +208,7 @@ export async function apiGetHistory() {
 }
 
 export async function apiDeleteSession(id: string) {
-  const res = await fetch(`${API_BASE}/sessions/${id}`, {
+  const res = await fetch(`${getApiBaseUrl()}/sessions/${id}`, {
     method: "DELETE",
     headers: { ...getAuthHeader() },
   });
@@ -201,7 +216,7 @@ export async function apiDeleteSession(id: string) {
   return res.json();
 }
 
-// 6. WebSocket Factory
+// 6. WebSocket Factory (Dynamic Host Resolution)
 export function connectSessionWebSocket(
   pin: string,
   options: { role?: "teacher" | "student"; name?: string }
@@ -211,7 +226,7 @@ export function connectSessionWebSocket(
   if (options.name) params.set("name", options.name);
 
   const queryStr = params.toString() ? `?${params.toString()}` : "";
-  const wsUrl = `${WS_BASE}/session/${pin}${queryStr}`;
+  const wsUrl = `${getWsBaseUrl()}/session/${pin}${queryStr}`;
 
   return new WebSocket(wsUrl);
 }
