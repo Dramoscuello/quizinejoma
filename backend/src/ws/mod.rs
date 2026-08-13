@@ -82,38 +82,40 @@ async fn handle_socket(socket: WebSocket, pin: String, query: WsQuery, state: Ap
     // If student provided a name in query params, register or find them
     let mut current_participant_id: Option<Uuid> = None;
 
-    if let Some(ref name) = query.name {
-        let name = name.trim();
-        if !name.is_empty() {
-            let existing: Option<(Uuid,)> = sqlx::query_as(
-                "SELECT id FROM participants WHERE session_id = $1 AND LOWER(name) = LOWER($2)",
-            )
-            .bind(session.id)
-            .bind(name)
-            .fetch_optional(&state.pool)
-            .await
-            .unwrap_or(None);
-
-            let p_id = if let Some((existing_id,)) = existing {
-                existing_id
-            } else {
-                let new_id = Uuid::new_v4();
-                let _ = sqlx::query(
-                    "INSERT INTO participants (id, session_id, name, score, correct_count) VALUES ($1, $2, $3, 0.0, 0)",
+    if query.role.as_deref() == Some("student") {
+        if let Some(ref name) = query.name {
+            let name = name.trim();
+            if !name.is_empty() && name != "Estudiante" {
+                let existing: Option<(Uuid,)> = sqlx::query_as(
+                    "SELECT id FROM participants WHERE session_id = $1 AND LOWER(name) = LOWER($2)",
                 )
-                .bind(new_id)
                 .bind(session.id)
                 .bind(name)
-                .execute(&state.pool)
-                .await;
-                new_id
-            };
+                .fetch_optional(&state.pool)
+                .await
+                .unwrap_or(None);
 
-            current_participant_id = Some(p_id);
-            info!("Estudiante '{}' ({}) conectado a la sala PIN {}", name, p_id, pin);
+                let p_id = if let Some((existing_id,)) = existing {
+                    existing_id
+                } else {
+                    let new_id = Uuid::new_v4();
+                    let _ = sqlx::query(
+                        "INSERT INTO participants (id, session_id, name, score, correct_count) VALUES ($1, $2, $3, 0.0, 0)",
+                    )
+                    .bind(new_id)
+                    .bind(session.id)
+                    .bind(name)
+                    .execute(&state.pool)
+                    .await;
+                    new_id
+                };
 
-            // Broadcast updated participant list to lobby
-            broadcast_lobby_update(&state.pool, session.id, &room_sender).await;
+                current_participant_id = Some(p_id);
+                info!("Estudiante '{}' ({}) conectado a la sala PIN {}", name, p_id, pin);
+
+                // Broadcast updated participant list to lobby
+                broadcast_lobby_update(&state.pool, session.id, &room_sender).await;
+            }
         }
     }
 

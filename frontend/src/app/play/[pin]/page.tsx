@@ -70,13 +70,19 @@ export default function StudentPlayPage({
   useEffect(() => {
     const nameFromUrl = searchParams.get("name");
     const nameFromStorage = sessionStorage.getItem("quizinejoma_student_name");
-    const name = nameFromUrl || nameFromStorage || "Estudiante";
+    const name = (nameFromUrl || nameFromStorage || "").trim();
+
+    if (!name) {
+      router.replace("/");
+      return;
+    }
+
     setStudentName(name);
 
     if (nameFromUrl) {
       sessionStorage.setItem("quizinejoma_student_name", nameFromUrl);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   // Prevent student from leaving (Back Button Trap & Close Confirmation)
   useEffect(() => {
@@ -106,13 +112,13 @@ export default function StudentPlayPage({
 
   // WebSocket real-time connection
   useEffect(() => {
-    if (!pin) return;
+    if (!pin || !studentName) return;
 
     let ws: WebSocket | null = null;
     try {
       ws = connectSessionWebSocket(pin, {
         role: "student",
-        name: studentName || "Estudiante",
+        name: studentName,
       });
       wsRef.current = ws;
 
