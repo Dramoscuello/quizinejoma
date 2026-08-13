@@ -19,7 +19,7 @@
   --radius-card: 2.5rem;
   --radius-subcard: 1.75rem;
   
-  --font-inter: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 @layer base {
@@ -27,7 +27,7 @@
     background: linear-gradient(135deg, #f0e6e6 0%, #fffbf2 50%, #fdf3d8 100%);
     min-height: 100vh;
     color: #1c1c17;
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
