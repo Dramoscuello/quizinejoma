@@ -1,0 +1,87 @@
+# ==============================================================================
+# QuizInejoma - Docker Compose Configuration
+# ==============================================================================
+# Para levantar toda la plataforma (Base de datos PostgreSQL, Backend Rust y Frontend Next.js):
+#   docker compose up -d --build
+#
+# Para detener los servicios:
+#   docker compose down
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Base de Datos PostgreSQL
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: quizinejoma-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: quizuser
+      POSTGRES_PASSWORD: quizpassword
+      POSTGRES_DB: quizinejoma
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quizuser -d quizinejoma"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quizinejoma-network
+
+  # ----------------------------------------------------------------------------
+  # 2. Servidor Backend (Rust:latest + Axum + WebSockets)
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: quizinejoma-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://quizuser:quizpassword@postgres:5432/quizinejoma
+      HOST: 0.0.0.0
+      PORT: 8080
+      CORS_ORIGIN: http://localhost:3000
+      ADMIN_USER: ${ADMIN_USER:-dramos}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Dejeracu93}
+      JWT_SECRET: ${JWT_SECRET:-quizinejoma_super_secret_jwt_key_2026_academic_production}
+    ports:
+      - "8080:8080"
+    networks:
+      - quizinejoma-network
+
+  # ----------------------------------------------------------------------------
+  # 3. Aplicación Web Frontend (Next.js)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080/api
+        NEXT_PUBLIC_WS_URL: ws://localhost:8080/ws
+    container_name: quizinejoma-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    networks:
+      - quizinejoma-network
+
+# ------------------------------------------------------------------------------
+# Volúmenes Persistentes y Redes
+# ------------------------------------------------------------------------------
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  quizinejoma-network:
+    driver: bridge

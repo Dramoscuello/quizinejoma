@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #171818;
+  --color-primary-container: #2c2c2c;
+  --color-secondary: #745b00;
+  --color-secondary-container: #ffd659;
+  --color-secondary-fixed-dim: #eac247;
+  --color-surface: #fdf9f1;
+  --color-surface-low: #f7f3eb;
+  --color-surface-card: #fcf8f0;
+  --color-surface-variant: #e6e2da;
+  --color-text-muted: #737373;
+  --color-text-dark: #1c1c17;
+  --color-card-dark: #2c2c2c;
+  --color-card-darker: #1f1f1f;
+  --color-card-white: #ffffff;
+  
+  --radius-card: 2.5rem;
+  --radius-subcard: 1.75rem;
+  
+  --font-inter: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+@layer base {
+  body {
+    background: linear-gradient(135deg, #f0e6e6 0%, #fffbf2 50%, #fdf3d8 100%);
+    min-height: 100vh;
+    color: #1c1c17;
+    font-family: var(--font-inter), sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom ambient shadows from Stitch design */
+.shadow-ambient {
+  box-shadow: 0px 10px 30px rgba(44, 44, 44, 0.05);
+}
+
+.shadow-ambient-hover {
+  transition: all 0.25s ease;
+}
+
+.shadow-ambient-hover:hover {
+  box-shadow: 0px 15px 40px rgba(44, 44, 44, 0.09);
+  transform: translateY(-2px);
+}
+
+.shadow-dark-card {
+  box-shadow: 0px 15px 35px rgba(20, 20, 20, 0.2);
+}
+
+/* Custom OTP Input Styling */
+.otp-input {
+  width: 72px;
+  height: 76px;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #171818;
+  background-color: #ffffff;
+  border: 2px solid #e6e2da;
+  border-radius: 1.25rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.otp-input:focus {
+  outline: none;
+  border-color: #ffd659;
+  box-shadow: 0 0 0 4px rgba(255, 214, 89, 0.35);
+  background-color: #fffdf5;
+}
+
+/* Custom scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Animations */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.98); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s infinite ease-in-out;
+}

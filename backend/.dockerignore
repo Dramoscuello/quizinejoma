@@ -1,0 +1,8 @@
+target
+.git
+.gitignore
+.env
+.env.local
+.DS_Store
+*.bk
+*.swp
