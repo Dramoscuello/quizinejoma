@@ -26,6 +26,7 @@ import {
   Group,
   Quiz,
   Session,
+  Participant,
   getStoredData,
   setStoredData,
   generate4DigitPin,
@@ -90,23 +91,40 @@ export default function DashboardPage() {
     try {
       const historyData = await apiGetHistory();
       if (Array.isArray(historyData)) {
-        const mappedSessions: Session[] = historyData.map((item: any) => ({
-          id: item.session.id,
-          pin: item.session.pin,
-          quizId: item.session.quiz_id,
-          gradeId: item.session.grade_id,
-          groupId: item.session.group_id,
-          groupName: item.group_name,
-          gradeName: item.grade_name,
-          quizTitle: item.quiz_title,
-          status: item.session.status,
-          currentQuestionIndex: item.session.current_question_index || 0,
-          timeRemaining: 30,
-          participants: [],
-          createdAt: item.session.created_at || "",
-        }));
+        const mappedSessions: Session[] = historyData.map((item: any) => {
+          const participants: Participant[] = (item.participants || []).map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            joinedAt: p.joined_at || "",
+            answers: {},
+            score: p.score ?? 0,
+            correctCount: p.correct_count ?? 0,
+          }));
+
+          return {
+            id: item.session.id,
+            pin: item.session.pin,
+            quizId: item.session.quiz_id,
+            gradeId: item.session.grade_id,
+            groupId: item.session.group_id,
+            groupName: item.group_name || undefined,
+            gradeName: item.grade_name || undefined,
+            quizTitle: item.quiz_title || undefined,
+            status: item.session.status,
+            currentQuestionIndex: item.session.current_question_index || 0,
+            timeRemaining: 30,
+            participants,
+            createdAt: item.session.created_at || "",
+          };
+        });
         setSessions(mappedSessions);
-        setStoredData("sessions", mappedSessions);
+
+        // Keep local store populated with complete participant history
+        const existingLocal = getStoredData<Session[]>("sessions", []);
+        const merged = mappedSessions.concat(
+          existingLocal.filter((localS) => !mappedSessions.some((m) => m.id === localS.id))
+        );
+        setStoredData("sessions", merged);
       }
     } catch {
       const storedSessions = getStoredData<Session[]>("sessions", []);
@@ -171,11 +189,11 @@ export default function DashboardPage() {
     const quiz = quizzes.find((q) => q.id === session.quizId);
     const totalQ = quiz?.questions.length || 5;
 
-    const studentRows = session.participants.map((p) => ({
+    const studentRows = (session.participants || []).map((p) => ({
       name: p.name,
-      correctCount: p.correctCount || 0,
+      correctCount: p.correctCount ?? (p as any).correct_count ?? 0,
       totalQuestions: totalQ,
-      score: p.score || 0,
+      score: p.score ?? 0,
     }));
 
     exportQuizResultsToExcel(
